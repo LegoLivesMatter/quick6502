@@ -9,6 +9,17 @@ enum {
 };
 
 enum {
+	REG_A,
+	REG_X,
+	REG_Y,
+	REG_PC,
+	REG_STACK,
+	REG_PSTATE
+};
+
+enum {
 	INSTRUCTION_LDA = 0xa9,
 	INSTRUCTION_STA = 0x8d
 };
+
+const int REG_COUNT = 5;
