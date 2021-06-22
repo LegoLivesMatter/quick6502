@@ -19,7 +19,9 @@ enum {
 
 enum {
 	INSTRUCTION_LDA = 0xa9,
-	INSTRUCTION_STA = 0x8d
+	INSTRUCTION_STA = 0x8d,
+	INSTRUCTION_LDX = 0xa2,
+	INSTRUCTION_STX = 0x8e
 };
 
 const int REG_COUNT = 5;
