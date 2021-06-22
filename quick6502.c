@@ -13,30 +13,42 @@ void debug( const char *message ) {
 }
 
 int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
-	uint8_t instruction = memory[*pc];
+	int state;
+	uint16_t temp_pc = *pc;
+	uint8_t instruction = memory[temp_pc];
+	temp_pc++;
 	switch( instruction ) {
-		case INSTRUCTION_LDA:
-			(*pc)++;
-			registers[REG_A] = memory[*pc];
+		case INSTRUCTION_LDA: {
+			registers[REG_A] = memory[temp_pc];
 			printf( "Got LDA, new value of A is 0x%x\n", registers[REG_A] );
-			(*pc)++;
-			return 1;
-		case INSTRUCTION_STA:
-			(*pc)++;
-			uint8_t low_half = memory[*pc];
-			(*pc)++;
-			uint8_t high_half = memory[*pc];
+			temp_pc++;
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_STA: {
+			uint8_t low_half = memory[temp_pc];
+			uint8_t high_half = memory[temp_pc + 1];
 			uint16_t address = (uint16_t) ( low_half | ( high_half << 8 ) );
 			memory[address] = registers[REG_A];
-			(*pc)++;
+			temp_pc += 2;
 			printf( "Got STA, value of %p is now %x\n", address, registers[REG_A] );
-			return 1;
-		case 0x02:
-			return 0;
-		default:
+			state = 1;
+			break;
+		}
+		case 0x02: {
+			printf( "Execution complete\n" );
+			state = 0;
+			break;
+		}
+		default: {
 			printf( "Unknown instruction 0x%x, check program or fix emulator!\n", instruction );
-			return 0;
+			state = 0;
+			break;
+		}
 	}
+
+	*pc = temp_pc;
+	return state;
 }
 
 int memory_dump( uint8_t *memory, char *filepath ) {
