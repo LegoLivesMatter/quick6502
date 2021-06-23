@@ -1,4 +1,8 @@
-LDA #$69
-STA $1352
-LDX #$42
-STX $1488
+  LDX #$08
+decrement:
+  DEX
+  STX $0200
+  CPX #$03
+  BNE decrement
+  STX $0201
+  BRK
