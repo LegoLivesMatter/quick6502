@@ -1,4 +1,5 @@
 *.o
 *.bin
+*.tar.gz
 quick6502
 sample
