@@ -77,15 +77,15 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			uint8_t x = registers[REG_X];
 			uint8_t value = memory[temp_pc++];
 			if( x >= value ) {
-				registers[REG_PSTATE] | PSTATE_CARRY;
+				registers[REG_PSTATE] = registers[REG_PSTATE] | PSTATE_CARRY;
 			}
 
 			if( x == value ) {
-				registers[REG_PSTATE] | PSTATE_ZERO;
+				registers[REG_PSTATE] = registers[REG_PSTATE] | PSTATE_ZERO;
 			}
 
 			if( x >= 0x80 ) {
-				registers[REG_PSTATE] | PSTATE_NEGATIVE;
+				registers[REG_PSTATE] = registers[REG_PSTATE] | PSTATE_NEGATIVE;
 			}
 			printf( "Got CPX w/ immediate addressing, PSTATE is now %x\n", registers[REG_PSTATE] );
 			state = 1;
@@ -94,7 +94,7 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 		case INSTRUCTION_ADC_IMMED: {
 			uint16_t sum = memory[temp_pc++] + registers[REG_A];
 			if( sum > 0xFF ) {
-				registers[REG_PSTATE] | PSTATE_CARRY;
+				registers[REG_PSTATE] = registers[REG_PSTATE] | PSTATE_CARRY;
 			}
 			registers[REG_A] = (uint8_t) sum;
 			printf( "Got ADC w/ immediate addressing, register A is now 0x%x\n", registers[REG_A] );
@@ -105,7 +105,7 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			uint8_t address = memory[temp_pc++];
 			uint16_t sum = memory[address] + registers[REG_A];
 			if( sum > 0xFF ) {
-				registers[REG_PSTATE] | PSTATE_CARRY;
+				registers[REG_PSTATE] = registers[REG_PSTATE] | PSTATE_CARRY;
 			}
 			registers[REG_A] = (uint8_t) sum;
 			printf( "Got ADC w/ zero page addressing, register A is now 0x%x\n", registers[REG_A] );
