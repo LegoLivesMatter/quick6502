@@ -6,6 +6,31 @@
 
 #define DEBUG
 
+char *nibble_lookup[] = {
+	[0x0] = "0000",
+	[0x1] = "0001",
+	[0x2] = "0010",
+	[0x3] = "0011",
+	[0x4] = "0100",
+	[0x5] = "0101",
+	[0x6] = "0110",
+	[0x7] = "0111",
+	[0x8] = "1000",
+	[0x9] = "1001",
+	[0xa] = "1010",
+	[0xb] = "1011",
+	[0xc] = "1100",
+	[0xd] = "1101",
+	[0xe] = "1110",
+	[0xf] = "1111"
+};
+
+char *get_bin( uint8_t number ) {
+	char *bin = calloc( 9, sizeof( char ) );
+	sprintf( bin, "%s%s", nibble_lookup[number >> 4], nibble_lookup[number & 0xf] );
+	return bin;
+}
+
 void debug( const char *message ) {
 #ifdef DEBUG
 	printf( "DEBUG: %s\n", message );
@@ -88,7 +113,7 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 				registers[REG_PSTATE] |= PSTATE_NEGATIVE;
 			}
 
-			printf( "Got CPX w/ immediate addressing, PSTATE is now %x\n", registers[REG_PSTATE] );
+			printf( "Got CPX w/ immediate addressing, PSTATE is now %s\n", get_bin( registers[REG_PSTATE] ) );
 			state = 1;
 			break;
 		}
