@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "enums.h"
+#include "framebuffer.h"
 
 #define ENABLE_DEBUG
 
@@ -171,9 +172,9 @@ int memory_dump( uint8_t *memory, char *filepath ) {
 int main( int argc, char** argv ) {
 	uint8_t *memory = calloc( UINT16_MAX,  sizeof( uint8_t ) );
 
-	/* Write default reset vector, 0x200 */
+	/* Write default reset vector, 0x6600 */
 	memory[ 0xFFFC ] = 0x00;
-	memory[ 0xFFFD ] = 0x02;
+	memory[ 0xFFFD ] = 0x66;
 
 	uint8_t *registers = calloc( REG_COUNT, sizeof( uint8_t ) );
 
@@ -215,7 +216,7 @@ int main( int argc, char** argv ) {
 
 	rewind( program );
 
-	fread( memory + 0x200, sizeof( uint8_t ), program_size, program );
+	fread( memory + 0x6600, sizeof( uint8_t ), program_size, program );
 
 	if( fclose( program ) ) {
 		printf( "Failed to close program file, aborting!\n" );
