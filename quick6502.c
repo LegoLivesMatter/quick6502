@@ -2,9 +2,16 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+
 #include "enums.h"
 
-#define DEBUG
+#define ENABLE_DEBUG
+
+#ifdef ENABLE_DEBUG
+#define DEBUG(MSG) printf( "DEBUG: %s\n", MSG )
+#endif
+
+#define ENDIAN_SWAP(LOW,HIGH) (uint16_t) ( LOW | ( HIGH << 8 ) )
 
 char *nibble_lookup[] = {
 	[0x0] = "0000",
@@ -31,16 +38,6 @@ char *get_bin( uint8_t number ) {
 	return bin;
 }
 
-void debug( const char *message ) {
-#ifdef DEBUG
-	printf( "DEBUG: %s\n", message );
-#endif
-}
-
-uint16_t endian_swap( uint8_t low_half, uint8_t high_half ) {
-	return (uint16_t) ( low_half | ( high_half << 8 ) );
-}
-
 int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 	int state;
 	uint16_t temp_pc = *pc;
@@ -55,7 +52,7 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 		case INSTRUCTION_STA_ABS: {
 			uint8_t low_half = memory[temp_pc++];
 			uint8_t high_half = memory[temp_pc++];
-			uint16_t address = endian_swap( low_half, high_half );
+			uint16_t address = ENDIAN_SWAP( low_half, high_half );
 			memory[address] = registers[REG_A];
 			printf( "Got STA w/ absolute addressing, value of %p is now %x\n", address, registers[REG_A] );
 			state = 1;
@@ -184,8 +181,10 @@ int main( int argc, char** argv ) {
 		printf( "Please specify a 6502 program to run!\n" );
 		return 2;
 	}
-
-	debug( "Opening program" );
+	
+	#ifdef ENABLE_DEBUG
+	DEBUG( "Opening program" );
+	#endif
 
 	FILE *program = fopen( argv[1], "rb" );
 
@@ -194,7 +193,9 @@ int main( int argc, char** argv ) {
 		return 2;
 	}
 
-	debug( "Loading program" );
+	#ifdef ENABLE_DEBUG
+	DEBUG( "Loading program" );
+	#endif
 
 	long program_size = 0;
 
@@ -223,9 +224,9 @@ int main( int argc, char** argv ) {
 
 	memory_dump( memory, "start_dump.bin" );
 
-	uint16_t program_counter = endian_swap( memory[ 0xFFFC ], memory[ 0xFFFD ] );
+	uint16_t program_counter = ENDIAN_SWAP( memory[ 0xFFFC ], memory[ 0xFFFD ] );
 
-	debug( "Begin execution" );
+	printf( "Begin execution at %X\n", program_counter );
 
 	int status = 1;
 	while( status )
