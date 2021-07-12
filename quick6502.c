@@ -43,30 +43,40 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 	uint8_t instruction = memory[temp_pc];
 	temp_pc++;
 	switch( instruction ) {
-		case INSTRUCTION_LDA: 
+		case INSTRUCTION_LDA_IMMED: 
 			registers[REG_A] = memory[temp_pc++];
-			printf( "Got LDA, new value of A is 0x%x\n", registers[REG_A] );
 			state = 1;
 			break;
+		case INSTRUCTION_LDA_ZP: {
+			uint8_t address = memory[temp_pc++];
+			registers[REG_A] = memory[address];
+			state = 1;
+			break;
+		}
 		case INSTRUCTION_STA_ABS: {
 			uint8_t low_half = memory[temp_pc++];
 			uint8_t high_half = memory[temp_pc++];
 			uint16_t address = ENDIAN_SWAP( low_half, high_half );
 			memory[address] = registers[REG_A];
-			printf( "Got STA w/ absolute addressing, value of %p is now %x\n", address, registers[REG_A] );
 			state = 1;
 			break;
 		}
 		case INSTRUCTION_STA_ZP: {
 			uint8_t address = memory[temp_pc++];
 			memory[address] = registers[REG_A];
-			printf( "Got STA w/ zero page addressing, value of %p is now 0x%x\n", address, registers[REG_A] );
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_STA_ABS_X: {
+			uint8_t low_half = memory[temp_pc++];
+			uint8_t high_half = memory[temp_pc++];
+			uint16_t address = ENDIAN_SWAP( low_half, high_half ) + registers[REG_X];
+			memory[address] = registers[REG_A];
 			state = 1;
 			break;
 		}
 		case INSTRUCTION_LDX:
 			registers[REG_X] = memory[temp_pc++];
-			printf( "Got LDX, new value of X is 0x%x\n", registers[REG_X] );
 			state = 1;
 			break;
 		case INSTRUCTION_STX: {
@@ -124,7 +134,12 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 				registers[REG_PSTATE] |= PSTATE_CARRY;
 			}
 			registers[REG_A] = (uint8_t) sum;
-			printf( "Got ADC w/ zero page addressing, register A is now 0x%x\n", registers[REG_A] );
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_INC_ZP: {
+			uint8_t address = memory[temp_pc++];
+			memory[address]++;
 			state = 1;
 			break;
 		}
