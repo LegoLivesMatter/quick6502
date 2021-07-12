@@ -190,9 +190,9 @@ int main( int argc, char** argv ) {
 		return 2;
 	}
 	
-	#ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
 	DEBUG( "Opening program" );
-	#endif
+#endif
 
 	FILE *program = fopen( argv[1], "rb" );
 
@@ -201,9 +201,9 @@ int main( int argc, char** argv ) {
 		return 2;
 	}
 
-	#ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
 	DEBUG( "Loading program" );
-	#endif
+#endif
 
 	long program_size = 0;
 
@@ -234,7 +234,9 @@ int main( int argc, char** argv ) {
 
 	uint16_t program_counter = ENDIAN_SWAP( memory[ 0xFFFC ], memory[ 0xFFFD ] );
 
+#ifdef ENABLE_DEBUG
 	DEBUG("Initialize framebuffer");
+#endif
 	struct framebuffer *fb = malloc( sizeof( struct framebuffer ) );
 	if( init_framebuffer( fb ) ) {
 		printf( "Failed to initialize framebuffer!\n" );
