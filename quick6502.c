@@ -6,8 +6,6 @@
 #include "enums.h"
 #include "framebuffer.h"
 
-#define ENABLE_DEBUG
-
 #ifdef ENABLE_DEBUG
 #define DEBUG(MSG) printf( "DEBUG: %s\n", MSG )
 #endif
@@ -77,23 +75,19 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			uint16_t address = (uint16_t) ( low_half | ( high_half << 8 ) );
 			memory[address] = registers[REG_X];
 			temp_pc += 2;
-			printf( "Got STX, value of %p is now %x\n", address, registers[REG_X] );
 			state = 1;
 			break;
 		}
 		case INSTRUCTION_TAX:
 			registers[REG_X] = registers[REG_A];
-			printf( "Got TXA, register X is now 0x%x\n", registers[REG_X] );
 			state = 1;
 			break;
 		case INSTRUCTION_INX:
 			registers[REG_X]++;
-			printf( "Got INX, register X is now 0x%x\n", registers[REG_X] );
 			state = 1;
 			break;
 		case INSTRUCTION_DEX:
 			registers[REG_X]--;
-			printf( "Got DEX, register X is now 0x%x\n", registers[REG_X] );
 			state = 1;
 			break;
 		case INSTRUCTION_CPX_IMMED: {
@@ -111,7 +105,6 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 				registers[REG_PSTATE] |= PSTATE_NEGATIVE;
 			}
 
-			printf( "Got CPX w/ immediate addressing, PSTATE is now %s\n", get_bin( registers[REG_PSTATE] ) );
 			state = 1;
 			break;
 		}
@@ -121,7 +114,6 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 				registers[REG_PSTATE] |= PSTATE_CARRY;
 			}
 			registers[REG_A] = (uint8_t) sum;
-			printf( "Got ADC w/ immediate addressing, register A is now 0x%x\n", registers[REG_A] );
 			state = 1;
 			break;
 		}
@@ -227,6 +219,13 @@ int main( int argc, char** argv ) {
 
 	uint16_t program_counter = ENDIAN_SWAP( memory[ 0xFFFC ], memory[ 0xFFFD ] );
 
+	DEBUG("Initialize framebuffer");
+	struct framebuffer *fb = malloc( sizeof( struct framebuffer ) );
+	if( init_framebuffer( fb ) ) {
+		printf( "Failed to initialize framebuffer!\n" );
+		return 1;
+	}
+
 	printf( "Begin execution at %X\n", program_counter );
 
 	int status = 1;
@@ -236,6 +235,11 @@ int main( int argc, char** argv ) {
 	}
 
 	memory_dump( memory, "end_dump.bin" );
+
+	printf( "Press any key to end program\n" );
+	getchar();
+	destroy_framebuffer( fb );
+	SDL_Quit();
 
 	return 0;
 }

@@ -15,7 +15,7 @@
 
 #include <SDL2/SDL.h>
 
-extern const SDL_Color vga_palette[16] = {
+static const SDL_Color vga_palette[16] = {
 	[0x0] = { .r = 0x0, .g = 0x0, .b = 0x0, .a = 0xFF },
 	[0x1] = { .r = 0x0, .g = 0x0, .b = 0xAA, .a = 0xFF },
 	[0x2] = { .r = 0x0, .g = 0xAA, .b = 0x0, .a = 0xFF },
@@ -33,6 +33,15 @@ extern const SDL_Color vga_palette[16] = {
 	[0xE] = { .r = 0xFF, .g = 0xFF, .b = 0x55, .a = 0xFF },
 	[0xF] = { .r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xFF }
 };
+
+struct framebuffer {
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+	SDL_Texture *texture;
+};
+
+extern int init_framebuffer( struct framebuffer *framebuffer );
+extern void destroy_framebuffer( struct framebuffer *framebuffer );
 
 #define MAP_COLOR(FORMAT, COLOR) SDL_MapRGBA( FORMAT, COLOR.r, COLOR.b, COLOR.g, COLOR.a )
 
