@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #include "enums.h"
 #include "framebuffer.h"
@@ -248,7 +249,18 @@ int main( int argc, char** argv ) {
 	int status = 1;
 	while( status )
 	{
-		status = parse_instruction( memory, registers, &program_counter);
+		status = parse_instruction( memory, registers, &program_counter );
+	
+		clock_t start,end;
+		start = clock();
+
+		uint8_t *fbmem = malloc( 0x6400 );
+		fbmem = memcpy( fbmem, memory + 0x200, 0x6400 );
+
+		end = clock();
+		printf( "memcpy took %ld cycles\n", end - start );
+
+		update_framebuffer( fb, fbmem );
 	}
 
 	memory_dump( memory, "end_dump.bin" );

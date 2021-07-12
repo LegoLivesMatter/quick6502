@@ -38,12 +38,15 @@ struct framebuffer {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Texture *texture;
+	SDL_PixelFormat *format;
 };
 
 extern int init_framebuffer( struct framebuffer *framebuffer );
+extern void draw_pixel( struct framebuffer *framebuffer, int x, int y, int color );
+extern void update_framebuffer( struct framebuffer *framebuffer, uint8_t *fbmem );
 extern void destroy_framebuffer( struct framebuffer *framebuffer );
 
-#define MAP_COLOR(FORMAT, COLOR) SDL_MapRGBA( FORMAT, COLOR.r, COLOR.b, COLOR.g, COLOR.a )
+#define MAP_COLOR(FORMAT, COLOR) SDL_MapRGBA( FORMAT, vga_palette[COLOR].r, vga_palette[COLOR].g, vga_palette[COLOR].b, vga_palette[COLOR].a )
 
 #endif /* #ifndef FRAMEBUFFER_H */
 
