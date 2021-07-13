@@ -246,26 +246,29 @@ int main( int argc, char** argv ) {
 
 	printf( "Begin execution at %X\n", program_counter );
 
+	uint8_t *prev_fbmem = NULL;
+
 	int status = 1;
 	while( status )
 	{
 		status = parse_instruction( memory, registers, &program_counter );
 	
-		clock_t start,end;
-		start = clock();
-
 		uint8_t *fbmem = malloc( 0x6400 );
 		fbmem = memcpy( fbmem, memory + 0x200, 0x6400 );
+		if( prev_fbmem == NULL ) { prev_fbmem = fbmem; }
 
-		end = clock();
-		printf( "memcpy took %ld cycles\n", end - start );
-
-		update_framebuffer( fb, fbmem );
+		if( memcmp( fbmem, prev_fbmem, 0x6400 ) != 0 ) {
+#ifdef ENABLE_DEBUG
+			DEBUG("Updating fb");
+#endif
+			update_framebuffer( fb, fbmem );
+			prev_fbmem = fbmem;
+		}
 	}
 
 	memory_dump( memory, "end_dump.bin" );
 
-	printf( "Press any key to end program\n" );
+	printf( "Press Enter to close emulator\n" );
 	getchar();
 	destroy_framebuffer( fb );
 	SDL_Quit();
