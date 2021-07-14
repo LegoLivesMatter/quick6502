@@ -1,14 +1,4 @@
 enum {
-	FLAG_NEG = 128,
-	FLAG_OVERFLOW = 64,
-	FLAG_BRK = 16,
-	FLAG_DECIMAL = 8,
-	FLAG_IRQB_DISABLE = 4,
-	FLAG_ZERO = 2,
-	FLAG_CARRY = 1
-};
-
-enum {
 	REG_A,
 	REG_X,
 	REG_Y,
@@ -18,11 +8,11 @@ enum {
 };
 
 enum {
-	PSTATE_CARRY = 1,
-	PSTATE_ZERO = 2,
-	PSTATE_DECIMAL = 8,
-	PSTATE_OVERFLOW = 64,
-	PSTATE_NEGATIVE = 128
+	PSTATE_CARRY = 1 << 0,
+	PSTATE_ZERO = 1 << 1,
+	PSTATE_DECIMAL = 1 << 3,
+	PSTATE_OVERFLOW = 1 << 6,
+	PSTATE_NEGATIVE = 1 << 7
 };
 
 enum {

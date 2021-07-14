@@ -11,7 +11,9 @@
 #endif
 
 #define ENDIAN_SWAP(LOW,HIGH) (uint16_t) ( LOW | ( HIGH << 8 ) )
+#define SET_FLAG(PSTATE,FLAG) PSTATE |= FLAG
 #define IS_FLAG_SET(PSTATE,FLAG) PSTATE & FLAG == FLAG
+#define CLEAR_FLAG(PSTATE,FLAG) PSTATE &= ~(FLAG)
 
 char *nibble_lookup[] = {
 	[0x0] = "0000",
@@ -104,26 +106,17 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 		case INSTRUCTION_CPX_IMMED: {
 			uint8_t x = registers[REG_X];
 			uint8_t value = memory[temp_pc++];
-			if( x >= value ) {
-				registers[REG_PSTATE] |= PSTATE_CARRY;
-			}
 
-			if( x == value ) {
-				registers[REG_PSTATE] |= PSTATE_ZERO;
-			}
-
-			if( x >= 0x80 ) {
-				registers[REG_PSTATE] |= PSTATE_NEGATIVE;
-			}
+			if( x >= value ) { SET_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); }
+			if( x == value ) { SET_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); }
+			if( x >= 0x80 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); }
 
 			state = 1;
 			break;
 		}
 		case INSTRUCTION_ADC_IMMED: {
 			uint16_t sum = memory[temp_pc++] + registers[REG_A];
-			if( sum > 0xFF ) {
-				registers[REG_PSTATE] |= PSTATE_CARRY;
-			}
+			if( sum > 0xFF ) { SET_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); }
 			registers[REG_A] = (uint8_t) sum;
 			state = 1;
 			break;
@@ -131,9 +124,7 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 		case INSTRUCTION_ADC_ZP: {
 			uint8_t address = memory[temp_pc++];
 			uint16_t sum = memory[address] + registers[REG_A];
-			if( sum > 0xFF ) {
-				registers[REG_PSTATE] |= PSTATE_CARRY;
-			}
+			if( sum > 0xFF ) { SET_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); }
 			registers[REG_A] = (uint8_t) sum;
 			state = 1;
 			break;
