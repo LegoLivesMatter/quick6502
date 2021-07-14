@@ -1,6 +1,6 @@
 CC = tcc # change to preferred C compiler
 AS = xa # change to preferred 6502 assembler
-VERSION = prealpha
+VERSION = $(shell git log -n 1 --oneline | awk '{print $$1}' )
 
 CFLAGS = -g -DENABLE_DEBUG
 LDFLAGS = -lSDL2
@@ -13,9 +13,14 @@ sample : sample.s
 	xa sample.s -o sample
 
 clean :
-	-rm *.o *.bin quick6502 sample
+	@-rm *.o *.bin quick6502 sample *.tar.gz 
 
-dist : clean
-	tar czf quick6502-$(VERSION).tar.gz *
+stash :
+	@echo "WARNING: Stashing uncommitted changes (if any)!"
+	@git stash push >/dev/null
+
+dist : clean stash
+	tar -cf quick6502-${VERSION}.tar *
+	gzip quick6502-${VERSION}.tar
 
 .PHONY = all clean
