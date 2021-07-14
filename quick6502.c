@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <time.h>
 
 #include "enums.h"
 #include "framebuffer.h"
@@ -12,6 +11,7 @@
 #endif
 
 #define ENDIAN_SWAP(LOW,HIGH) (uint16_t) ( LOW | ( HIGH << 8 ) )
+#define IS_FLAG_SET(PSTATE,FLAG) PSTATE & FLAG == FLAG
 
 char *nibble_lookup[] = {
 	[0x0] = "0000",
@@ -147,6 +147,14 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 		case INSTRUCTION_BRK: {
 			printf( "Execution complete\n" );
 			state = 0;
+			break;
+		}
+		case INSTRUCTION_BNE: {
+			int8_t offset = (int8_t) memory[temp_pc++];
+			if( !(IS_FLAG_SET( registers[REG_PSTATE], PSTATE_ZERO ) ) ) {
+				temp_pc += offset;
+			}
+			state = 1;
 			break;
 		}
 		default: 
