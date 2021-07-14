@@ -78,6 +78,17 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			state = 1;
 			break;
 		}
+		case INSTRUCTION_CMP_IMMED: {
+			uint8_t a = registers[REG_A];
+			uint8_t value = memory[temp_pc++];
+
+			if( a >= value ) { SET_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_CARRY ); }
+			if( a == value ) { SET_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); }
+			if( a >= 0x80 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); }
+			
+			state = 1;
+			break;
+		}
 		case INSTRUCTION_LDX:
 			registers[REG_X] = memory[temp_pc++];
 			state = 1;
@@ -145,6 +156,25 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			if( !(IS_FLAG_SET( registers[REG_PSTATE], PSTATE_ZERO ) ) ) {
 				temp_pc += offset;
 			}
+			printf( "%p\n", temp_pc );
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_BCS: {
+			int8_t offset = (int8_t) memory[temp_pc++];
+			if( IS_FLAG_SET( registers[REG_PSTATE], PSTATE_CARRY ) ) {
+				temp_pc += offset;
+			}
+			printf( "%p\n", temp_pc );
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_BCC: {
+			int8_t offset = (int8_t) memory[temp_pc++];
+			if( !(IS_FLAG_SET( registers[REG_PSTATE], PSTATE_CARRY ) ) ) {
+				temp_pc += offset;
+			}
+			printf( "%p\n", temp_pc );
 			state = 1;
 			break;
 		}
