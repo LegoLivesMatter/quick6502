@@ -13,7 +13,7 @@ void clear_framebuffer( struct framebuffer *framebuffer ) {
 	}
 
 	int i;
-	for( i = 0; i < 160 * 160; i++ ) {
+	for( i = 0; i < 32 * 32; i++ ) {
 		pixels[i] = MAP_COLOR( framebuffer->format, 0x0 );
 	}
 
@@ -48,8 +48,8 @@ void draw_pixel( struct framebuffer *framebuffer, int x, int y, int color ) {
 
 void update_framebuffer( struct framebuffer *framebuffer, uint8_t *fbmem ) {
 	int x;
-	for( x = 0; x < 160 * 160; x++ ) {
-		draw_pixel( framebuffer, x % 160, x / 160, fbmem[x] );
+	for( x = 0; x < 32 * 32; x++ ) {
+		draw_pixel( framebuffer, x % 32, x / 32, fbmem[x] );
 	}
 	SDL_RenderCopy( framebuffer->renderer, framebuffer->texture, NULL, NULL );
 	SDL_RenderPresent( framebuffer->renderer );
@@ -80,7 +80,7 @@ int init_framebuffer( struct framebuffer *framebuffer) {
 		}
 	}
 
-	new_fb.texture = SDL_CreateTexture( new_fb.renderer, SDL_GetWindowPixelFormat( new_fb.window ), SDL_TEXTUREACCESS_STREAMING, 160, 160 );
+	new_fb.texture = SDL_CreateTexture( new_fb.renderer, SDL_GetWindowPixelFormat( new_fb.window ), SDL_TEXTUREACCESS_STREAMING, 32, 32 );
 
 	if ( new_fb.texture == NULL ) {
 		fprintf( stderr, "Failed to create rendering texture: %s\n", SDL_GetError() );

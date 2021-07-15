@@ -209,9 +209,9 @@ int memory_dump( uint8_t *memory, char *filepath ) {
 int main( int argc, char** argv ) {
 	uint8_t *memory = calloc( UINT16_MAX,  sizeof( uint8_t ) );
 
-	/* Write default reset vector, 0x6600 */
+	/* Write default reset vector, 0x600 */
 	memory[ 0xFFFC ] = 0x00;
-	memory[ 0xFFFD ] = 0x66;
+	memory[ 0xFFFD ] = 0x06;
 
 	uint8_t *registers = calloc( REG_COUNT, sizeof( uint8_t ) );
 
@@ -253,7 +253,7 @@ int main( int argc, char** argv ) {
 
 	rewind( program );
 
-	fread( memory + 0x6600, sizeof( uint8_t ), program_size, program );
+	fread( memory + 0x600, sizeof( uint8_t ), program_size, program );
 
 	if( fclose( program ) ) {
 		printf( "Failed to close program file, aborting!\n" );
@@ -282,11 +282,11 @@ int main( int argc, char** argv ) {
 	{
 		status = parse_instruction( memory, registers, &program_counter );
 	
-		uint8_t *fbmem = malloc( 0x6400 );
-		fbmem = memcpy( fbmem, memory + 0x200, 0x6400 );
+		uint8_t *fbmem = malloc( 0x400 );
+		fbmem = memcpy( fbmem, memory + 0x200, 0x400 );
 		if( prev_fbmem == NULL ) { prev_fbmem = fbmem; }
 
-		if( memcmp( fbmem, prev_fbmem, 0x6400 ) != 0 ) {
+		if( memcmp( fbmem, prev_fbmem, 0x400 ) != 0 ) {
 #ifdef ENABLE_DEBUG
 			DEBUG("Updating fb");
 #endif
