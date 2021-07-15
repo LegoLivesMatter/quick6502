@@ -1,14 +1,16 @@
-	LDX #00
+	.org $6600
+
+	ldx #00
 rsta:
-	LDA #00
-	STA $00
+	lda #00
+	sta $00
 draw:
-	STA $0200,X
-	INX
-	INC $00
-	LDA $00
-	CMP #$10
-	BNE draw
-	CPX #$F0
-	BCC rsta
-	BRK
+	sta $0200,X
+	inx
+	inc $00
+	lda $00
+	cmp #$10
+	bne draw
+	cpx #$F0
+	bcc rsta
+	brk
