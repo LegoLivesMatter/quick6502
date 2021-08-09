@@ -23,7 +23,6 @@ struct framebuffer {
 };
 
 extern int init_framebuffer( struct framebuffer *framebuffer );
-extern void draw_pixel( struct framebuffer *framebuffer, int x, int y, uint8_t color );
 extern void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem );
 extern void destroy_framebuffer( struct framebuffer *framebuffer );
 

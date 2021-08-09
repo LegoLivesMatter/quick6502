@@ -9,6 +9,8 @@
 
 #ifdef ENABLE_DEBUG
 #define DEBUG(MSG) printf( "DEBUG: %s\n", MSG )
+#else
+#define DEBUG(MSG) 
 #endif
 
 #define ENDIAN_SWAP(LOW,HIGH) (uint16_t) ( LOW | ( HIGH << 8 ) )
@@ -79,8 +81,6 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			uint8_t high_half = memory[temp_pc++];
 			uint16_t address = ENDIAN_SWAP( low_half, high_half ) + registers[REG_X];
 			memory[address] = registers[REG_A];
-			uint8_t color = registers[REG_A];
-			printf("%x %x %x\n", ((color & 224) >> 5), ((color & 28) >> 2), (color & 3));
 			state = 1;
 			break;
 		}
@@ -294,9 +294,7 @@ int main( int argc, char** argv ) {
 		return 2;
 	}
 	
-#ifdef ENABLE_DEBUG
 	DEBUG( "Opening program" );
-#endif
 
 	FILE *program = fopen( argv[1], "rb" );
 
@@ -305,9 +303,7 @@ int main( int argc, char** argv ) {
 		return 2;
 	}
 
-#ifdef ENABLE_DEBUG
 	DEBUG( "Loading program" );
-#endif
 
 	long program_size = 0;
 
@@ -337,9 +333,8 @@ int main( int argc, char** argv ) {
 
 	uint16_t program_counter = ENDIAN_SWAP( memory[ 0xFFFC ], memory[ 0xFFFD ] );
 
-#ifdef ENABLE_DEBUG
 	DEBUG("Initialize framebuffer");
-#endif
+
 	struct framebuffer *fb = malloc( sizeof( struct framebuffer ) );
 	if( init_framebuffer( fb ) ) {
 		printf( "Failed to initialize framebuffer!\n" );
@@ -357,9 +352,6 @@ int main( int argc, char** argv ) {
 		status = parse_instruction( memory, registers, &program_counter );
 	
 		if( memcmp( fbmem, prev_fbmem, 0x400 ) != 0 ) {
-#ifdef ENABLE_DEBUG
-			DEBUG("Updating fb");
-#endif
 			update_framebuffer( fb, fbmem );
 			memcpy( prev_fbmem, fbmem, 0x400 );
 		}

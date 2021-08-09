@@ -3,6 +3,8 @@
 
 #ifdef ENABLE_DEBUG
 #define DEBUG(MSG) printf( "DEBUG: %s\n", MSG )
+#else
+#define DEBUG(MSG) 
 #endif
 
 void clear_framebuffer( struct framebuffer *framebuffer ) {
@@ -14,7 +16,7 @@ void clear_framebuffer( struct framebuffer *framebuffer ) {
 
 	int i;
 	for( i = 0; i < 32 * 32; i++ ) {
-		pixels[i] = MAP_COLOR( framebuffer->format, 0x0 );
+		pixels[i] = 0;
 	}
 
 	SDL_UnlockTexture( framebuffer->texture );
@@ -25,33 +27,22 @@ void clear_framebuffer( struct framebuffer *framebuffer ) {
 	SDL_RenderPresent( framebuffer->renderer );
 }
 
-void draw_pixel( struct framebuffer *framebuffer, int x, int y, uint8_t color ) {
+void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem ) {
 	uint8_t *pixels;
-	int pitch;
+	int pitch, x, y;
 
-	SDL_Rect pixel;
-	pixel.x = x;
-	pixel.y = y;
-	pixel.w = 1;
-	pixel.h = 1;
-
-	if( SDL_LockTexture( framebuffer->texture, &pixel, (void **) &pixels, &pitch ) != 0 ) {
+	if( SDL_LockTexture( framebuffer->texture, NULL, (void **) &pixels, &pitch ) ) {
 		fprintf( stderr, "Failed to lock texture: %s\n", SDL_GetError() );
 		return;
 	}
 
-	/*pixels[0] = MAP_COLOR( framebuffer->format, color );*/
-	pixels[0] = color;
+	for( y = 0; y < 32; y++ ) {
+		for( x = 0; x < 32; x++ ) {
+			pixels[x + (y * 32)] = fbmem[x + (y * 32)];
+		}
+	}
 
 	SDL_UnlockTexture( framebuffer->texture );
-	pixels = NULL;
-}
-
-void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem ) {
-	int x;
-	for( x = 0; x < 32 * 32; x++ ) {
-		draw_pixel( framebuffer, x % 32, x / 32, fbmem[x] );
-	}
 	SDL_RenderCopy( framebuffer->renderer, framebuffer->texture, NULL, NULL );
 	SDL_RenderPresent( framebuffer->renderer );
 }
