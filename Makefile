@@ -1,10 +1,10 @@
-CC = tcc # change to preferred C compiler
+CC = gcc # change to preferred C compiler
 AS = vasm6502_oldstyle # change to preferred 6502 assembler
 ASFLAGS = -Fbin -dotdir
 VERSION = $(shell git log -n 1 --oneline | awk '{print $$1}' )
 
-CFLAGS = -g -DENABLE_DEBUG
-LDFLAGS = -lSDL2
+CFLAGS = -g -DENABLE_DEBUG -std=c90 -Wall
+LDFLAGS = -g -lSDL2
 
 all : quick6502 sample
 

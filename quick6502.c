@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "enums.h"
 #include "framebuffer.h"
@@ -12,7 +13,7 @@
 
 #define ENDIAN_SWAP(LOW,HIGH) (uint16_t) ( LOW | ( HIGH << 8 ) )
 #define SET_FLAG(PSTATE,FLAG) PSTATE |= FLAG
-#define IS_FLAG_SET(PSTATE,FLAG) PSTATE & FLAG == FLAG
+#define IS_FLAG_SET(PSTATE,FLAG) ((PSTATE) & (FLAG)) == (FLAG)
 #define CLEAR_FLAG(PSTATE,FLAG) PSTATE &= ~(FLAG)
 
 char *nibble_lookup[] = {
@@ -48,11 +49,14 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 	switch( instruction ) {
 		case INSTRUCTION_LDA_IMMED: 
 			registers[REG_A] = memory[temp_pc++];
+			if( registers[REG_A] == 0 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); }
+			if( registers[REG_A] >= 0x80 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); }
 			state = 1;
 			break;
 		case INSTRUCTION_LDA_ZP: {
-			uint8_t address = memory[temp_pc++];
-			registers[REG_A] = memory[address];
+			registers[REG_A] = memory[temp_pc++];
+			if( registers[REG_A] == 0 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); }
+			if( registers[REG_A] >= 0x80 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); }
 			state = 1;
 			break;
 		}
@@ -75,6 +79,8 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			uint8_t high_half = memory[temp_pc++];
 			uint16_t address = ENDIAN_SWAP( low_half, high_half ) + registers[REG_X];
 			memory[address] = registers[REG_A];
+			uint8_t color = registers[REG_A];
+			printf("%x %x %x\n", ((color & 224) >> 5), ((color & 28) >> 2), (color & 3));
 			state = 1;
 			break;
 		}
@@ -91,6 +97,8 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 		}
 		case INSTRUCTION_LDX:
 			registers[REG_X] = memory[temp_pc++];
+			if( registers[REG_X] == 0 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); }
+			if( registers[REG_X] >= 0x80 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); }
 			state = 1;
 			break;
 		case INSTRUCTION_STX: {
@@ -156,7 +164,6 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			if( !(IS_FLAG_SET( registers[REG_PSTATE], PSTATE_ZERO ) ) ) {
 				temp_pc += offset;
 			}
-			printf( "%p\n", temp_pc );
 			state = 1;
 			break;
 		}
@@ -165,7 +172,6 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			if( IS_FLAG_SET( registers[REG_PSTATE], PSTATE_CARRY ) ) {
 				temp_pc += offset;
 			}
-			printf( "%p\n", temp_pc );
 			state = 1;
 			break;
 		}
@@ -174,7 +180,74 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			if( !(IS_FLAG_SET( registers[REG_PSTATE], PSTATE_CARRY ) ) ) {
 				temp_pc += offset;
 			}
-			printf( "%p\n", temp_pc );
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_JSR: {
+			uint8_t oldpclow, oldpchigh, temp_sp = registers[REG_STACK];
+			uint16_t decpc = ++temp_pc;
+			oldpclow = decpc & 0xff;
+			oldpchigh = decpc >> 8;
+
+			memory[0x100 | temp_sp--] = oldpchigh;
+			memory[0x100 | temp_sp--] = oldpclow;
+
+			registers[REG_STACK] = temp_sp;
+
+			uint8_t pclow, pchigh;
+			pclow = memory[--temp_pc];
+			pchigh = memory[++temp_pc];
+			temp_pc = ENDIAN_SWAP( pclow, pchigh );
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_RTS: {
+			uint8_t returnlow, returnhigh, temp_sp = registers[REG_STACK];
+			uint16_t returnpc;
+
+			returnlow = memory[0x100 | temp_sp++];
+			returnhigh = memory[0x100 | temp_sp++];
+			returnpc = ENDIAN_SWAP( returnlow, returnhigh) + 1;
+
+			registers[REG_STACK] = temp_sp;
+			temp_pc = returnpc;
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_LDA_ABS_X: {
+			uint8_t addrlow, addrhigh;
+			uint16_t addr;
+
+			addrlow = memory[temp_pc++];
+			addrhigh = memory[temp_pc++];
+			addr = ENDIAN_SWAP( addrlow, addrhigh );
+
+			registers[REG_A] = memory[addr + registers[REG_X]];
+			if( registers[REG_A] == 0 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_ZERO ); }
+			if( registers[REG_A] >= 0x80 ) { SET_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); } else { CLEAR_FLAG( registers[REG_PSTATE], PSTATE_NEGATIVE ); }
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_BEQ: {
+			int8_t offset;
+
+			if( IS_FLAG_SET( registers[REG_PSTATE], PSTATE_ZERO) ) {
+				offset = (int8_t) memory[temp_pc++];
+				temp_pc += offset;
+			} else { temp_pc++; }
+
+			state = 1;
+			break;
+		}
+		case INSTRUCTION_JMP: {
+			uint8_t lowaddr, highaddr;
+			uint16_t newpc;
+
+			lowaddr = memory[temp_pc++];
+			highaddr = memory[temp_pc++];
+			newpc = ENDIAN_SWAP( lowaddr, highaddr );
+			temp_pc = newpc;
+
 			state = 1;
 			break;
 		}
@@ -209,11 +282,12 @@ int memory_dump( uint8_t *memory, char *filepath ) {
 int main( int argc, char** argv ) {
 	uint8_t *memory = calloc( UINT16_MAX,  sizeof( uint8_t ) );
 
-	/* Write default reset vector, 0x600 */
+	/* Write default reset vector, 0x8000 */
 	memory[ 0xFFFC ] = 0x00;
-	memory[ 0xFFFD ] = 0x06;
+	memory[ 0xFFFD ] = 0x80;
 
 	uint8_t *registers = calloc( REG_COUNT, sizeof( uint8_t ) );
+	registers[REG_STACK] = 0xff;
 
 	if( argv[1] == NULL ) {
 		printf( "Please specify a 6502 program to run!\n" );
@@ -245,7 +319,7 @@ int main( int argc, char** argv ) {
 
 	program_size = ftell( program );
 
-	if( program_size > 65023 ) { /* 65535 - 256 */
+	if( program_size > 65023 ) { 
 		printf( "Program size exceeds ~64K, cannot continue!\n" );
 		fclose( program );
 		return 1;
@@ -253,13 +327,12 @@ int main( int argc, char** argv ) {
 
 	rewind( program );
 
-	fread( memory + 0x600, sizeof( uint8_t ), program_size, program );
+	fread( memory + 0x8000, sizeof( uint8_t ), program_size, program );
 
 	if( fclose( program ) ) {
 		printf( "Failed to close program file, aborting!\n" );
 		return 1;
 	}
-
 	memory_dump( memory, "start_dump.bin" );
 
 	uint16_t program_counter = ENDIAN_SWAP( memory[ 0xFFFC ], memory[ 0xFFFD ] );
@@ -275,23 +348,20 @@ int main( int argc, char** argv ) {
 
 	printf( "Begin execution at %X\n", program_counter );
 
-	uint8_t *prev_fbmem = NULL;
+	uint8_t *prev_fbmem = calloc( 0x400, sizeof( uint8_t ) );
+	const uint8_t *fbmem = memory + 0x200;
 
 	int status = 1;
 	while( status )
 	{
 		status = parse_instruction( memory, registers, &program_counter );
 	
-		uint8_t *fbmem = malloc( 0x400 );
-		fbmem = memcpy( fbmem, memory + 0x200, 0x400 );
-		if( prev_fbmem == NULL ) { prev_fbmem = fbmem; }
-
 		if( memcmp( fbmem, prev_fbmem, 0x400 ) != 0 ) {
 #ifdef ENABLE_DEBUG
 			DEBUG("Updating fb");
 #endif
 			update_framebuffer( fb, fbmem );
-			prev_fbmem = fbmem;
+			memcpy( prev_fbmem, fbmem, 0x400 );
 		}
 	}
 
@@ -299,6 +369,9 @@ int main( int argc, char** argv ) {
 
 	printf( "Press Enter to close emulator\n" );
 	getchar();
+	free( prev_fbmem );
+	free( memory );
+	free( registers );
 	destroy_framebuffer( fb );
 	SDL_Quit();
 

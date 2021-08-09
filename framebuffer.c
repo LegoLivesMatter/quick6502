@@ -6,7 +6,7 @@
 #endif
 
 void clear_framebuffer( struct framebuffer *framebuffer ) {
-	Uint32 *pixels;
+	uint8_t *pixels;
 	int pitch;
 	if( SDL_LockTexture( framebuffer->texture, NULL, (void **) &pixels, &pitch ) != 0 ) {
 		fprintf( stderr, "Failed to lock texture: %s\n", SDL_GetError() );
@@ -25,8 +25,8 @@ void clear_framebuffer( struct framebuffer *framebuffer ) {
 	SDL_RenderPresent( framebuffer->renderer );
 }
 
-void draw_pixel( struct framebuffer *framebuffer, int x, int y, int color ) {
-	Uint32 *pixels;
+void draw_pixel( struct framebuffer *framebuffer, int x, int y, uint8_t color ) {
+	uint8_t *pixels;
 	int pitch;
 
 	SDL_Rect pixel;
@@ -40,13 +40,14 @@ void draw_pixel( struct framebuffer *framebuffer, int x, int y, int color ) {
 		return;
 	}
 
-	pixels[0] = MAP_COLOR( framebuffer->format, color );
+	/*pixels[0] = MAP_COLOR( framebuffer->format, color );*/
+	pixels[0] = color;
 
 	SDL_UnlockTexture( framebuffer->texture );
 	pixels = NULL;
 }
 
-void update_framebuffer( struct framebuffer *framebuffer, uint8_t *fbmem ) {
+void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem ) {
 	int x;
 	for( x = 0; x < 32 * 32; x++ ) {
 		draw_pixel( framebuffer, x % 32, x / 32, fbmem[x] );
@@ -80,7 +81,7 @@ int init_framebuffer( struct framebuffer *framebuffer) {
 		}
 	}
 
-	new_fb.texture = SDL_CreateTexture( new_fb.renderer, SDL_GetWindowPixelFormat( new_fb.window ), SDL_TEXTUREACCESS_STREAMING, 32, 32 );
+	new_fb.texture = SDL_CreateTexture( new_fb.renderer, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, 32, 32 );
 
 	if ( new_fb.texture == NULL ) {
 		fprintf( stderr, "Failed to create rendering texture: %s\n", SDL_GetError() );

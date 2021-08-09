@@ -1,16 +1,13 @@
-	.org $0600
-
-	ldx #00
-rsta:
-	lda #00
-	sta $00
-draw:
-	sta $0200,X
+	.org $8000
+	
+	ldx #$00
+loop:
+	lda text,x
+	beq stop
+	sta $200,x
 	inx
-	inc $00
-	lda $00
-	cmp #$10
-	bne draw
-	cpx #$F0
-	bcc rsta
+	jmp loop
+stop:
 	brk
+text:
+	.string "Hello World!"
