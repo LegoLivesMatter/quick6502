@@ -22,9 +22,10 @@ struct framebuffer {
 	SDL_PixelFormat *format;
 };
 
-extern int init_framebuffer( struct framebuffer *framebuffer );
-extern void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem );
+extern int init_framebuffer( struct framebuffer **framebuffer );
+extern void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem, uint8_t *prev_fbmem, int fb_size );
 extern void destroy_framebuffer( struct framebuffer *framebuffer );
+extern void shutdown_framebuffer();
 
 #endif /* #ifndef FRAMEBUFFER_H */
 

@@ -7,6 +7,7 @@
 #define DEBUG(MSG) 
 #endif
 
+#ifdef ENABLE_FRAMEBUFFER
 void clear_framebuffer( struct framebuffer *framebuffer ) {
 	uint8_t *pixels;
 	int pitch;
@@ -27,27 +28,32 @@ void clear_framebuffer( struct framebuffer *framebuffer ) {
 	SDL_RenderPresent( framebuffer->renderer );
 }
 
-void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem ) {
-	uint8_t *pixels;
-	int pitch, x, y;
+void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem, uint8_t *prev_fbmem, int fb_size ) {
+	if( memcmp( fbmem, prev_fbmem, fb_size ) != 0 ) {
+		uint8_t *pixels;
+		int pitch, x, y;
 
-	if( SDL_LockTexture( framebuffer->texture, NULL, (void **) &pixels, &pitch ) ) {
-		fprintf( stderr, "Failed to lock texture: %s\n", SDL_GetError() );
-		return;
-	}
-
-	for( y = 0; y < 32; y++ ) {
-		for( x = 0; x < 32; x++ ) {
-			pixels[x + (y * 32)] = fbmem[x + (y * 32)];
+		if( SDL_LockTexture( framebuffer->texture, NULL, (void **) &pixels, &pitch ) ) {
+			fprintf( stderr, "Failed to lock texture: %s\n", SDL_GetError() );
+			return;
 		}
-	}
 
-	SDL_UnlockTexture( framebuffer->texture );
-	SDL_RenderCopy( framebuffer->renderer, framebuffer->texture, NULL, NULL );
-	SDL_RenderPresent( framebuffer->renderer );
+		for( y = 0; y < 32; y++ ) {
+			for( x = 0; x < 32; x++ ) {
+				pixels[x + (y * 32)] = fbmem[x + (y * 32)];
+			}
+		}
+
+		SDL_UnlockTexture( framebuffer->texture );
+		SDL_RenderCopy( framebuffer->renderer, framebuffer->texture, NULL, NULL );
+		SDL_RenderPresent( framebuffer->renderer );
+
+		memcpy( prev_fbmem, fbmem, fb_size );
+	}
 }
 
-int init_framebuffer( struct framebuffer *framebuffer) {
+int init_framebuffer( struct framebuffer **framebuffer) {
+	*framebuffer = malloc( sizeof( struct framebuffer ) );
 	struct framebuffer new_fb;
 
 	new_fb.window = SDL_CreateWindow( "Quick 6502", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 640, 0 );
@@ -81,7 +87,7 @@ int init_framebuffer( struct framebuffer *framebuffer) {
 
 	clear_framebuffer( &new_fb );
 
-	*framebuffer = new_fb;
+	**framebuffer = new_fb;
 	return 0;
 }
 
@@ -92,3 +98,27 @@ void destroy_framebuffer( struct framebuffer *framebuffer ) {
 	SDL_FreeFormat( framebuffer->format );
 	free( framebuffer );
 }
+
+void shutdown_framebuffer()
+{
+	SDL_Quit();
+}
+#else /* #ifdef ENABLE_FRAMEBUFFER */
+void update_framebuffer( struct framebuffer *framebuffer, const uint8_t *fbmem, uint8_t *prev_fbmem, int fb_size )
+{
+}
+
+void destroy_framebuffer( struct framebuffer *framebuffer )
+{
+	free( framebuffer );
+}
+
+void shutdown_framebuffer()
+{
+}
+
+int init_framebuffer( struct framebuffer **framebuffer )
+{
+	return 0;
+}
+#endif /* #ifdef ENABLE_FRAMEBUFFER */

@@ -335,8 +335,8 @@ int main( int argc, char** argv ) {
 
 	DEBUG("Initialize framebuffer");
 
-	struct framebuffer *fb = malloc( sizeof( struct framebuffer ) );
-	if( init_framebuffer( fb ) ) {
+	struct framebuffer *fb = NULL;
+	if( init_framebuffer( &fb ) ) {
 		printf( "Failed to initialize framebuffer!\n" );
 		return 1;
 	}
@@ -350,11 +350,7 @@ int main( int argc, char** argv ) {
 	while( status )
 	{
 		status = parse_instruction( memory, registers, &program_counter );
-	
-		if( memcmp( fbmem, prev_fbmem, 0x400 ) != 0 ) {
-			update_framebuffer( fb, fbmem );
-			memcpy( prev_fbmem, fbmem, 0x400 );
-		}
+		update_framebuffer( fb, fbmem, prev_fbmem, 0x400 );
 	}
 
 	memory_dump( memory, "end_dump.bin" );
@@ -365,7 +361,7 @@ int main( int argc, char** argv ) {
 	free( memory );
 	free( registers );
 	destroy_framebuffer( fb );
-	SDL_Quit();
+	shutdown_framebuffer();
 
 	return 0;
 }
