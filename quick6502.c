@@ -114,6 +114,26 @@ int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 			registers[REG_X] = registers[REG_A];
 			state = 1;
 			break;
+		case INSTRUCTION_TAY:
+			registers[REG_Y] = registers[REG_A];
+			state = 1;
+			break;
+		case INSTRUCTION_TSX:
+			registers[REG_X] = registers[REG_STACK];
+			state = 1;
+			break;
+		case INSTRUCTION_TXA:
+			registers[REG_A] = registers[REG_X];
+			state = 1;
+			break;
+		case INSTRUCTION_TXS:
+			registers[REG_STACK] = registers[REG_X];
+			state = 1;
+			break;
+		case INSTRUCTION_TYA:
+			registers[REG_A] = registers[REG_Y];
+			state = 1;
+			break;
 		case INSTRUCTION_INX:
 			registers[REG_X]++;
 			state = 1;

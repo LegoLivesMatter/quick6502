@@ -43,6 +43,11 @@ enum instructions {
 	INSTRUCTION_STA_ZP = 0x85, /* STore A into address (zero page) */
 	INSTRUCTION_STX = 0x8e, /* STore X into address */
 	INSTRUCTION_TAX = 0xaa, /* Transfer A to X */
+	INSTRUCTION_TAY = 0xa8, /* Transfer A to Y */
+	INSTRUCTION_TSX = 0xba, /* Transfer Stack pointer to X */
+	INSTRUCTION_TXA = 0x8a, /* Transfer X to Accumulator */
+	INSTRUCTION_TXS = 0x9a, /* Transfer X to Stack pointer */
+	INSTRUCTION_TYA = 0x98, /* Transfer Y to Accumulator */
 	
 	/* Miscellaneous */
 	INSTRUCTION_INC_ZP = 0xe6, /* INCrement value at address (zero page) */
