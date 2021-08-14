@@ -46,7 +46,7 @@ char *get_bin( uint8_t number ) {
 int parse_instruction( uint8_t *memory, uint8_t *registers, uint16_t *pc ) {
 	int state;
 	uint16_t temp_pc = *pc;
-	uint8_t instruction = memory[temp_pc];
+	enum instructions instruction = memory[temp_pc];
 	temp_pc++;
 	switch( instruction ) {
 		case INSTRUCTION_LDA_IMMED: 

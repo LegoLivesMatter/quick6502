@@ -7,7 +7,7 @@ enum {
 	REG_PSTATE /* processor state */
 };
 
-enum {
+enum processor_state {
 	PSTATE_CARRY = 1 << 0,
 	PSTATE_ZERO = 1 << 1,
 	PSTATE_DECIMAL = 1 << 3,
@@ -15,7 +15,7 @@ enum {
 	PSTATE_NEGATIVE = 1 << 7
 };
 
-enum {
+enum instructions {
 	/* Arithmetic operations */
 	INSTRUCTION_ADC_IMMED = 0x69, /* ADd with Carry (immediate) */
 	INSTRUCTION_ADC_ZP = 0x65, /* ADd with Carry (zero page) */
